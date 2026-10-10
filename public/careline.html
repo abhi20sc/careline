@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#eef3ee">
+<title>CareLine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="careline.css">
+</head>
+<body>
+<!--
+THESIS: Booking by voice should feel like a desk clerk filling in your appointment card while you talk; refuses the chatbot window with a generic assistant avatar.
+OWN-WORLD: Pale hospital card-stock green, printed green ink rules and labels, written values in near-black, violet rubber-stamp ink for anything confirmed, 108 red reserved for emergencies. Atkinson Hyperlegible Next throughout.
+STORY: The patient talks, sees each answer land on the card, hears one question at a time, and leaves with a stamped, free appointment or, in an emergency, a direct route to 108.
+FIRST VIEWPORT: Left, a large plain heading and one "Start call" button; right, the empty appointment card with ruled fields. Mic dock fixed at the bottom of the left column.
+FORM: Outpatient appointment card (6 of 7 on the grounded list), raised by the boarding-pass challenger's segmented fields, tabular figures and "a changed value stays lit until noticed". Seed ccd3c923.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+<header class="bar">
+  <div class="brand"><b>CareLine</b><span>Hospital appointment line, Bangalore</span></div>
+  <nav class="views" aria-label="View">
+    <a href="#call" id="tab-call">Call</a>
+    <a href="#staff" id="tab-staff">Staff</a>
+  </nav>
+  <a class="sos" href="tel:108">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/></svg>
+    <span class="sos-label">Emergency:</span> 108
+  </a>
+</header>
+
+<!-- ======================= Call ======================= -->
+<main class="call" id="call-view">
+  <section class="talk" aria-label="Conversation">
+    <div class="transcript" id="transcript" aria-live="polite">
+      <div class="start" id="start">
+        <h1>Book a hospital appointment by talking.</h1>
+        <p>CareLine asks a few short questions, fills in your appointment card, and offers you a free slot. It books appointments; it does not give medical advice.</p>
+        <button class="btn primary big" id="start-call">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15Z"/><path d="M19 11.5a7 7 0 0 1-14 0"/><path d="M12 18.5V22"/></svg>
+          Start call
+        </button>
+        <p class="small">Your browser will ask to use the microphone. Speak after CareLine finishes; it listens until you pause.</p>
+      </div>
+    </div>
+
+    <div class="dock" id="dock" data-state="idle">
+      <button class="mic" id="mic" aria-label="Talk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15Z"/><path d="M19 11.5a7 7 0 0 1-14 0"/><path d="M12 18.5V22"/></svg>
+      </button>
+      <div class="state" id="state" role="status"><b>Ready when you are</b><span>Press Start call, tap the mic, or hold Space.</span></div>
+      <label class="switch"><input type="checkbox" id="hands-free" checked> Hands-free</label>
+      <p class="disclaimer">This service books appointments; it does not give medical advice.</p>
+    </div>
+  </section>
+
+  <aside class="card-col" aria-label="Your appointment card">
+    <details class="card" id="card" open>
+      <summary class="card-head"><b><span class="long">Outpatient appointment card</span><span class="short">Your appointment card</span></b><span id="card-count" class="num">0 of 9
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <dl class="fields" id="fields">
+        <div class="field wide" data-f="problem"><dt>Problem</dt><dd></dd></div>
+        <div class="field l" data-f="body_part"><dt>Body part</dt><dd></dd></div>
+        <div class="field r" data-f="duration"><dt>Since</dt><dd></dd></div>
+        <div class="field l" data-f="severity"><dt>How bad (1–10)</dt><dd class="num"></dd></div>
+        <div class="field r" data-f="worsening"><dt>Getting worse</dt><dd></dd></div>
+        <div class="field wide" data-f="name"><dt>Patient name</dt><dd></dd></div>
+        <div class="field l" data-f="age"><dt>Age</dt><dd class="num"></dd></div>
+        <div class="field r" data-f="phone"><dt>Phone</dt><dd class="num"></dd></div>
+        <div class="field l" data-f="department"><dt>Department</dt><dd></dd></div>
+        <div class="field r" data-f="urgency"><dt>Urgency</dt><dd></dd></div>
+      </dl>
+      <div class="slot" id="slot"><h2>Appointment</h2><p class="empty">Filled in once you agree to a time.</p></div>
+      <p class="card-foot">Appointments are free. Doctors and times are a demo schedule, not a real hospital.</p>
+      <div class="card-actions" id="card-actions" hidden>
+        <button class="btn" id="new-call">New call</button>
+      </div>
+    </details>
+  </aside>
+</main>
+
+<!-- ======================= Staff ======================= -->
+<main class="staff" id="staff-view" hidden>
+  <div class="staff-head">
+    <div>
+      <h1>Intakes</h1>
+      <p id="staff-count">No calls yet.</p>
+    </div>
+    <button class="btn" id="clear">Clear all</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Time</th><th>Patient</th><th>Summary</th><th>Department</th><th>Urgency</th><th>Red flag</th><th>Booked slot</th></tr>
+      </thead>
+      <tbody id="staff-rows"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- ======================= Emergency ======================= -->
+<div class="emergency" id="emergency" role="alertdialog" aria-modal="true" aria-labelledby="em-title" hidden>
+  <div class="inner">
+    <h2 id="em-title">Please call 108 or go to the nearest emergency department now.</h2>
+    <p class="soft" id="em-reason"></p>
+    <p id="em-manas" hidden>If you are having thoughts of ending your life, you can also call Tele-MANAS on <strong>14416</strong>, free, any time, day or night.</p>
+    <p class="soft">We have not booked a clinic appointment. This needs urgent care.</p>
+    <div class="row">
+      <a class="call108" href="tel:108"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/></svg>Call 108</a>
+      <a class="call108" href="tel:14416" id="em-manas-call" hidden>Call 14416</a>
+    </div>
+    <div class="ask" id="em-ask">
+      <b>Do you need an ambulance?</b>
+      <div class="row">
+        <button class="eb" data-amb="yes">Yes</button>
+        <button class="eb" data-amb="no">No</button>
+      </div>
+      <p class="listening" id="em-listening">Listening for yes or no…</p>
+    </div>
+    <p id="em-after" hidden></p>
+    <div class="row"><button class="eb" id="em-close">Close</button></div>
+  </div>
+</div>
+
+<script src="careline.js" type="module"></script>
+</body>
+</html>

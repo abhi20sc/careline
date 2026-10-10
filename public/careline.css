@@ -1,0 +1,306 @@
+/* CareLine: an outpatient appointment card that fills in as you talk.
+   Card stock green, hospital-print ink, violet rubber-stamp ink for what is confirmed,
+   108 red for emergencies only. */
+
+:root {
+  --ground: #eef3ee;
+  --card: #dceadf;
+  --card-edge: #bcd3c2;
+  --rule: #9fbca9;
+  --print: #1d5a40;        /* printed card text and primary actions */
+  --print-strong: #154431;
+  --ink: #15211b;          /* written values */
+  --ink-soft: #3e5247;
+  --paper: #fbfdfb;        /* the patient's slips */
+  --paper-edge: #d6e2d9;
+  --stamp: #553a9a;        /* rubber-stamp violet: booked, confirmed */
+  --stamp-wash: rgba(85, 58, 154, .09);
+  --alarm: #b3261e;
+  --alarm-wash: #fbe9e7;
+  --focus: #553a9a;
+  --shadow: 0 1px 2px rgba(21, 33, 27, .08), 0 3px 8px -4px rgba(21, 33, 27, .18);
+  --radius: 14px;
+  --font: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0e1612;
+    --card: #16241d;
+    --card-edge: #26392f;
+    --rule: #34503f;
+    --print: #8fd3ad;
+    --print-strong: #b3e6c8;
+    --ink: #e7f0ea;
+    --ink-soft: #a9bdb1;
+    --paper: #1c2a23;
+    --paper-edge: #2b3e33;
+    --stamp: #b9a2ff;
+    --stamp-wash: rgba(185, 162, 255, .12);
+    --alarm: #b3261e;
+    --alarm-wash: #3a1714;
+    --focus: #b9a2ff;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 3px 8px -4px rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font: 17px/1.5 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--stamp); color: #fff; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+a { color: var(--print); text-underline-offset: 3px; }
+button { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---- Top bar ------------------------------------------------------------------------ */
+.bar {
+  display: flex; align-items: center; gap: 20px; padding: 14px 24px;
+  border-bottom: 1px solid var(--card-edge); background: var(--ground);
+}
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+.brand b { font-size: 21px; letter-spacing: -.01em; color: var(--print-strong); }
+.brand span { font-size: 14px; color: var(--ink-soft); }
+.views { display: flex; gap: 4px; }
+.views a {
+  font-size: 15px; padding: 7px 14px; border-radius: 999px; text-decoration: none; color: var(--ink-soft);
+}
+.views a:hover { color: var(--ink); background: var(--card); }
+.views a[aria-current="page"] { background: var(--print); color: var(--ground); }
+.sos {
+  display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px;
+  color: var(--alarm); text-decoration: none; padding: 7px 12px; border-radius: 999px; border: 1.5px solid currentColor;
+}
+.sos:hover { background: var(--alarm); color: #fff; }
+.sos svg { width: 16px; height: 16px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sos { color: #ff8a80; }
+  :root:not([data-theme="light"]) .sos:hover { color: #fff; }
+}
+
+/* ---- Call layout -------------------------------------------------------------------- */
+.call {
+  display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 32px;
+  max-width: 1180px; margin: 0 auto; padding: 24px 24px 0; height: calc(100% - 63px);
+}
+.talk { display: flex; flex-direction: column; min-height: 0; }
+
+.transcript {
+  flex: 1; overflow-y: auto; padding: 8px 4px 24px; display: flex; flex-direction: column; gap: 14px;
+  scroll-behavior: smooth;
+}
+
+/* CareLine speaks as printed card text; the patient answers on paper slips. */
+.line { max-width: 34em; }
+.line.cl { font-size: 21px; line-height: 1.45; color: var(--print-strong); }
+.line.cl .who { display: block; font-size: 13px; font-weight: 700; color: var(--print); margin-bottom: 2px; }
+.line.me {
+  align-self: flex-end; background: var(--paper); border: 1px solid var(--paper-edge); border-radius: var(--radius) var(--radius) 4px var(--radius);
+  padding: 10px 14px; box-shadow: var(--shadow); font-size: 18px;
+}
+.line.me .meta { display: block; font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; text-align: right; }
+.line.me.unclear { border-color: var(--alarm); }
+.line.me.flagged { border-color: var(--alarm); background: var(--alarm-wash); }
+.line.note { align-self: center; font-size: 14px; color: var(--ink-soft); }
+
+/* Start panel, shown before the call */
+.start { margin: auto 0; padding: 24px 4px; max-width: 34em; }
+.start h1 { font-size: 40px; line-height: 1.1; letter-spacing: -.02em; margin: 0 0 14px; color: var(--print-strong); text-wrap: balance; }
+.start p { font-size: 19px; color: var(--ink-soft); margin: 0 0 28px; max-width: 30em; }
+.start .small { font-size: 15px; margin: 18px 0 0; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 999px;
+  padding: 12px 22px; font-weight: 600; font-size: 17px; border: 1.5px solid var(--print);
+  background: transparent; color: var(--print); transition: background .15s ease, color .15s ease, transform .1s ease;
+}
+.btn:hover { background: var(--card); }
+.btn:active { transform: scale(.98); }
+.btn.primary { background: var(--print); color: var(--ground); }
+.btn.primary:hover { background: var(--print-strong); }
+.btn.big { padding: 16px 28px; font-size: 19px; }
+.btn svg { width: 22px; height: 22px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.choices .btn { padding: 8px 16px; font-size: 16px; }
+
+/* ---- Dock: the one control ------------------------------------------------------------ */
+.dock {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px;
+  padding: 16px 4px 18px; border-top: 1px solid var(--card-edge);
+}
+.mic {
+  position: relative; width: 72px; height: 72px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--print); color: var(--ground); display: grid; place-items: center;
+  box-shadow: var(--shadow); transition: background .2s ease, transform .1s ease;
+}
+.mic:active { transform: scale(.96); }
+.mic svg { width: 30px; height: 30px; position: relative; z-index: 1; }
+.mic::before {   /* level ring while listening */
+  content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--stamp);
+  opacity: 0; transform: scale(calc(1 + var(--level, 0) * .35)); transition: opacity .2s ease, transform .06s linear;
+}
+.dock[data-state="listening"] .mic { background: var(--stamp); }
+.dock[data-state="listening"] .mic::before { opacity: .55; }
+.dock[data-state="thinking"] .mic { background: var(--ink-soft); cursor: progress; }
+.dock[data-state="thinking"] .mic::before {
+  opacity: .8; border-color: var(--ink-soft) transparent transparent transparent; animation: spin 1s linear infinite;
+}
+.dock[data-state="speaking"] .mic { background: var(--print-strong); }
+@keyframes spin { to { transform: rotate(1turn); } }
+
+.state b { display: block; font-size: 18px; }
+.state span { font-size: 14.5px; color: var(--ink-soft); }
+.bars { display: inline-flex; gap: 3px; align-items: flex-end; height: 14px; margin-left: 8px; vertical-align: -1px; }
+.bars i { width: 3px; background: currentColor; border-radius: 2px; animation: bar .9s ease-in-out infinite; }
+.bars i:nth-child(2) { animation-delay: .15s; } .bars i:nth-child(3) { animation-delay: .3s; }
+@keyframes bar { 0%, 100% { height: 4px; } 50% { height: 14px; } }
+
+.switch { display: flex; align-items: center; gap: 10px; font-size: 14.5px; color: var(--ink-soft); cursor: pointer; user-select: none; }
+.switch input { appearance: none; width: 42px; height: 24px; border-radius: 999px; background: var(--rule); position: relative; cursor: pointer; margin: 0; transition: background .15s ease; }
+.switch input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--paper); transition: transform .15s ease; }
+.switch input:checked { background: var(--print); }
+.switch input:checked::after { transform: translateX(18px); }
+
+.disclaimer { grid-column: 1 / -1; margin: 0; font-size: 13.5px; color: var(--ink-soft); }
+
+/* ---- The appointment card ----------------------------------------------------------- */
+.card-col { padding-bottom: 24px; overflow-y: auto; }
+.card {
+  position: relative; background: var(--card); border: 1px solid var(--card-edge); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 18px 20px 20px; overflow: hidden;
+}
+.card summary { list-style: none; cursor: default; }
+.card summary::-webkit-details-marker { display: none; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--print); }
+.card-head b { font-size: 17px; color: var(--print-strong); }
+.card-head .short { display: none; }
+#card-count { font-size: 13px; color: var(--print); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.chev { display: none !important; width: 14px; height: 14px; transition: rotate .2s ease; }
+
+.fields { display: grid; grid-template-columns: 1fr 1fr; margin: 0; }
+.field { padding: 9px 0 8px; border-bottom: 1px solid var(--rule); min-width: 0; }
+.field.l { padding-right: 12px; }
+.field.r { padding-left: 12px; border-left: 1px solid var(--rule); }
+.field.wide { grid-column: 1 / -1; }
+.field dt { font-size: 12.5px; font-weight: 600; color: var(--print); }
+.field dd { margin: 1px 0 0; font-size: 17px; min-height: 1.5em; overflow-wrap: anywhere; }
+.field dd:empty::after { content: '—'; color: var(--rule); }
+.field.fresh dd { animation: ink-in .5s cubic-bezier(.16, 1, .3, 1); }
+.field.fresh { background: linear-gradient(var(--stamp-wash), var(--stamp-wash)) no-repeat 0 100% / 100% 100%; }
+@keyframes ink-in { from { opacity: 0; filter: blur(3px); transform: translateY(2px); } }
+
+.slot { margin-top: 16px; border: 1.5px dashed var(--rule); border-radius: 8px; padding: 12px 14px; position: relative; min-height: 96px; }
+.slot h2 { margin: 0 0 4px; font-size: 12.5px; font-weight: 600; color: var(--print); }
+.slot .when { font-size: 21px; font-weight: 700; margin: 0; }
+.slot .who { margin: 0; color: var(--ink-soft); font-size: 15px; }
+.slot .empty { margin: 0; color: var(--ink-soft); font-size: 15px; }
+.slot.offered { border-color: var(--stamp); }
+.slot.offered h2::after { content: ' · waiting for your yes'; font-weight: 400; color: var(--stamp); }
+.slot.booked { border-style: solid; border-color: var(--stamp); }
+.slot.alarm { border-style: solid; border-color: var(--alarm); }
+.slot.alarm h2, .slot.alarm .when { color: var(--alarm); }
+
+/* The signature moment: a violet rubber stamp lands on the card. */
+.stamp {
+  position: absolute; right: 12px; top: 50%; translate: 0 -50%; rotate: -8deg;
+  border: 3px solid var(--stamp); color: var(--stamp); border-radius: 8px; padding: 4px 10px 3px;
+  font-weight: 700; font-size: 20px; letter-spacing: .08em; line-height: 1.1; text-align: center;
+  mix-blend-mode: multiply; opacity: .9; pointer-events: none;
+}
+.stamp small { display: block; font-size: 11px; letter-spacing: .04em; font-weight: 600; }
+.stamp.land { animation: stamp .42s cubic-bezier(.16, 1, .3, 1); }
+@keyframes stamp {
+  0% { opacity: 0; scale: 1.9; rotate: -16deg; filter: blur(2px); }
+  60% { opacity: .95; scale: .96; filter: blur(0); }
+  100% { opacity: .9; scale: 1; rotate: -8deg; }
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .stamp { mix-blend-mode: screen; } }
+
+.card-foot { margin: 14px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+.card-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+/* ---- Emergency ------------------------------------------------------------------------ */
+.emergency {
+  position: fixed; inset: 0; z-index: 20; background: #b3261e; color: #fff;
+  display: grid; place-items: center; padding: 24px 16px; overflow-y: auto;
+}
+.emergency .inner { max-width: 640px; text-align: center; }
+.emergency h2 { font-size: clamp(30px, 6vw, 46px); line-height: 1.12; letter-spacing: -.015em; margin: 0 0 18px; text-wrap: balance; }
+.emergency p { font-size: 19px; margin: 0 0 12px; color: #fff; }
+.emergency .soft { color: rgba(255, 255, 255, .88); font-size: 16px; }
+.emergency .ask { margin-top: 26px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, .35); }
+.emergency .ask b { display: block; font-size: 24px; margin-bottom: 12px; }
+.emergency .row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
+.emergency .call108, .emergency .eb {
+  display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 19px; padding: 14px 26px;
+  border-radius: 999px; cursor: pointer; text-decoration: none; border: 2px solid #fff;
+}
+.emergency .call108 { background: #fff; color: #b3261e; }
+.emergency .call108 svg { width: 22px; height: 22px; }
+.emergency .eb { background: transparent; color: #fff; }
+.emergency .eb:hover { background: rgba(255, 255, 255, .14); }
+.emergency .listening { font-size: 15px; margin-top: 12px; color: rgba(255, 255, 255, .9); }
+.emergency :focus-visible { outline-color: #fff; }
+
+/* ---- Staff dashboard ------------------------------------------------------------------- */
+.staff { max-width: 1240px; margin: 0 auto; padding: 24px; }
+.staff-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.staff-head h1 { margin: 0; font-size: 26px; color: var(--print-strong); letter-spacing: -.01em; }
+.staff-head p { margin: 2px 0 0; font-size: 14.5px; color: var(--ink-soft); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--card-edge); border-radius: 10px; background: var(--paper); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--paper-edge); vertical-align: top; }
+th { font-size: 12.5px; font-weight: 600; color: var(--print); background: var(--card); white-space: nowrap; position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+tr.alarm td { background: var(--alarm-wash); }
+td .sub { display: block; color: var(--ink-soft); font-size: 13.5px; }
+td.nowrap { white-space: nowrap; }
+.tag { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.tag.alarm { background: var(--alarm); color: #fff; }
+.tag.ok { background: var(--stamp-wash); color: var(--stamp); }
+.tag.wait { background: var(--card); color: var(--ink-soft); }
+td select {
+  font: inherit; font-size: 14.5px; padding: 5px 8px; border: 1px solid var(--rule); border-radius: 8px;
+  background: var(--paper); color: var(--ink); max-width: 190px;
+}
+.empty-row td { text-align: center; color: var(--ink-soft); padding: 40px 14px; }
+
+/* ---- Small screens: the card folds above the dock ------------------------------------------ */
+@media (max-width: 900px) {
+  .bar { padding: 12px 16px; gap: 10px; }
+  .brand span, .sos-label { display: none; }
+  .bar { flex-wrap: nowrap; }
+  .card-head .long { display: none; }
+  .card-head .short { display: inline; }
+  .call { grid-template-columns: 1fr; padding: 12px 16px 0; gap: 12px; height: calc(100% - 59px); grid-template-rows: auto minmax(0, 1fr); }
+  .card-col { order: -1; padding-bottom: 0; overflow: visible; }
+  .card { padding: 12px 14px; }
+  .card summary { cursor: pointer; }
+  .card:not([open]) .card-head { border-bottom: 0; padding-bottom: 0; }
+  .chev { display: inline-block !important; }
+  .card[open] .chev { rotate: 180deg; }
+  .line.cl { font-size: 19px; }
+  .start h1 { font-size: 31px; }
+  .dock { grid-template-columns: auto 1fr; }
+  .switch { grid-column: 1 / -1; }
+  .staff { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+#em-after { margin: 20px 0 4px; font-size: 21px; font-weight: 700; }
+
+td details.said { margin-top: 4px; font-size: 13.5px; color: var(--ink-soft); max-width: 36ch; }
+td details.said summary { cursor: pointer; color: var(--print); width: fit-content; }
