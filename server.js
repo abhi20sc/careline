@@ -11,10 +11,49 @@ const API_KEY = process.env.ASSEMBLY_AI_KEY;
 const ENDPOINT = 'https://dictation.assemblyai.com/v1/transcribe/live';
 const PORT = process.env.PORT || 3000;
 
+// Public demo limits, counted in replies (one full call is about 10). 0 turns a limit off.
+const IP_LIMIT = Number(process.env.DEMO_IP_LIMIT ?? 40);        // per visitor, per hour
+const DAILY_LIMIT = Number(process.env.DEMO_DAILY_LIMIT ?? 500); // everyone, per UTC day
+const HOUR_MS = 60 * 60 * 1000;
+const recentByIp = new Map(); // ip → request times in the last hour
+let day = '';
+let usedToday = 0;
+
+/** Returns an error message when this request is over a limit, otherwise counts it. */
+function overLimit(ip) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (today !== day) {
+    day = today;
+    usedToday = 0;
+  }
+  if (DAILY_LIMIT && usedToday >= DAILY_LIMIT) {
+    return 'The demo has used up today\'s free calls. Please try again tomorrow, or run it yourself from GitHub.';
+  }
+  const now = Date.now();
+  const recent = (recentByIp.get(ip) || []).filter((t) => now - t < HOUR_MS);
+  if (IP_LIMIT && recent.length >= IP_LIMIT) {
+    return 'You have reached the demo limit for this hour. Please try again later.';
+  }
+  recent.push(now);
+  recentByIp.set(ip, recent);
+  usedToday += 1;
+  return null;
+}
+
+// Forget visitors with no requests in the last hour, so the map stays small.
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, times] of recentByIp) {
+    if (!times.some((t) => now - t < HOUR_MS)) recentByIp.delete(ip);
+  }
+}, HOUR_MS).unref();
+
 // 120s of 16kHz mono 16-bit PCM is ~3.8MB. 8MB leaves generous headroom.
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 const app = express();
+// Behind a host's proxy (Render, etc.) the visitor's address is in X-Forwarded-For.
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY));
 app.use(express.static(path.join(here, 'public'), { index: 'careline.html' }));
 app.use('/shared', express.static(path.join(here, 'shared')));
 
@@ -25,6 +64,10 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
   }
   if (!req.file) {
     return res.status(400).json({ error: 'No audio uploaded' });
+  }
+  const limited = overLimit(req.ip);
+  if (limited) {
+    return res.status(429).json({ error: limited });
   }
 
   // Only forward parameters the caller actually set — the API rejects nulls.

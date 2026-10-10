@@ -62,6 +62,14 @@ evening" or "Monday" picks a different slot.
 - **The API key never reaches the browser.** [`server.js`](server.js) is a small Express proxy that adds the
   key and forwards the audio.
 
+## Deploy your own
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/abhi20sc/careline)
+
+[`render.yaml`](render.yaml) sets everything up on Render's free plan; it asks for your AssemblyAI key during
+setup. The server caps use so a public link can't run up your bill: 40 replies per visitor per hour and 500
+per day in total (a full call is about 10). Change them with `DEMO_IP_LIMIT` and `DEMO_DAILY_LIMIT`.
+
 ## Run it
 
 You need Node 20 or newer and an [AssemblyAI API key](https://www.assemblyai.com/dashboard/api-keys).
@@ -82,7 +90,8 @@ npm test                # 90 tests: red flags, booking rules, intake and answer 
 ## Layout
 
 ```text
-server.js                  Express proxy: holds the key, forwards audio to the Dictation API
+server.js                  Express proxy: holds the key, forwards audio, applies demo limits
+render.yaml                one-click Render deploy
 public/
   careline.html/.js/.css   caller screen and staff dashboard
   schedule.json            mock schedule: 28 doctors, 15-minute slots over the next 5 days

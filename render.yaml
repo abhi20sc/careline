@@ -1,0 +1,18 @@
+# One-click deploy on Render: https://render.com/deploy?repo=https://github.com/abhi20sc/careline
+services:
+  - type: web
+    name: careline
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: ASSEMBLY_AI_KEY
+        sync: false        # Render asks for it during setup; it is never stored in the repo
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DEMO_IP_LIMIT
+        value: "40"        # replies per visitor per hour (a full call is about 10)
+      - key: DEMO_DAILY_LIMIT
+        value: "500"       # replies per day for everyone together
