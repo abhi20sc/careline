@@ -7,7 +7,8 @@ and books a free slot once they say yes. It never diagnoses or gives medical adv
 **Emergency checks are code, not AI.** Fixed rules read every reply before anything else. If a caller
 mentions chest pain, a stroke sign or suicidal thoughts, CareLine stops, shows "call 108" and never books.
 
-Built in October 2026 at an [AssemblyAI](https://www.assemblyai.com) event, on their
+Built at the [London Voice AI Meetup: Build your own voice app](https://luma.com/k74g72a0), an AssemblyAI ×
+Encode Club build night in London on 1 October 2026, on AssemblyAI's
 [Dictation API](https://www.assemblyai.com/docs/dictation).
 
 ![CareLine demo](docs/demo.gif)
