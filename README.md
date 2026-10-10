@@ -11,6 +11,9 @@ Built at the [London Voice AI Meetup: Build your own voice app](https://luma.com
 Encode Club build night in London on 1 October 2026, on AssemblyAI's
 [Dictation API](https://www.assemblyai.com/docs/dictation).
 
+**[Try it live](https://careline-6mbj.onrender.com)** (Chrome, with a microphone. The first load can take up to a
+minute while the free server wakes up.)
+
 ![CareLine demo](docs/demo.gif)
 
 [Watch the full demo video (28 s, with sound)](docs/demo.mp4)
